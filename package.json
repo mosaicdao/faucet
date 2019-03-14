@@ -1,0 +1,34 @@
+{
+  "name": "@openst/faucet",
+  "version": "0.1.0",
+  "description": "Mosaic faucet for base coins and EIP20 tokens",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint src -c .eslintrc.json --ext ts",
+    "start": "tsc && node build/faucet.js",
+    "test": "npm run test",
+    "tsc": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenST/faucet.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OpenST/faucet/issues"
+  },
+  "homepage": "https://github.com/OpenST/faucet#readme",
+  "dependencies": {
+    "@types/node": "^11.11.3",
+    "commander": "^2.19.0",
+    "typescript": "^3.3.3333"
+  },
+  "devDependencies": {
+    "eslint": "5.10.0",
+    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-plugin-import": "2.14.0",
+    "eslint-plugin-json": "1.4.0",
+    "@typescript-eslint/parser": "^1.4.2"
+  }
+}
