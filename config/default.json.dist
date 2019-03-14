@@ -1,0 +1,19 @@
+{
+  "Chains": {
+    "3": {
+      "WebSocket": "ws://localhost:8547",
+      "Funds": {
+        "Type": "EIP20",
+        "Amount": 100,
+        "Address": "0x325f05a75999347b7d8461BaEf274afAE0B8AE1c"
+      }
+    },
+    "200": {
+      "WebSocket": "ws://localhost:8548",
+      "Funds": {
+        "Type": "Coin",
+        "Amount": 10
+      }
+    }
+  }
+}

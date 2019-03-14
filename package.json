@@ -22,7 +22,12 @@
   "dependencies": {
     "@types/node": "^11.11.3",
     "commander": "^2.19.0",
-    "typescript": "^3.3.3333"
+    "config": "^3.0.1",
+    "inquirer": "^6.2.2",
+    "typescript": "^3.3.3333",
+    "web3": "^1.0.0-beta.37",
+    "web3-provider-engine": "^14.2.0",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "eslint": "5.10.0",
