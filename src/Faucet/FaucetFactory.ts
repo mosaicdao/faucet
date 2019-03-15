@@ -26,10 +26,10 @@ export default class FaucetFactory {
 
     switch (faucetType) {
       case 'EIP20':
-        Logger.info('New EIP20Faucet.');
+        Logger.info(`New EIP20Faucet at ${ethNode.account.address} on chain ${chain}.`);
         return new EIP20Faucet(ethNode, chain);
       case 'Coin':
-        Logger.info('New CoinFaucet.');
+        Logger.info(`New CoinFaucet at ${ethNode.account.address} on chain ${chain}.`);
         return new CoinFaucet(ethNode, chain);
       default:
         Logger.error(`Unknown faucet type from config: ${faucetType}.`);

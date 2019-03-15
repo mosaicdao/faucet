@@ -37,6 +37,7 @@ export default class Account {
     const keyStore = config.get(this.accountConfigAccessor);
 
     this.web3Account = this.web3.eth.accounts.decrypt(keyStore, password);
+    Logger.info(`Unlocked account ${this.web3Account.address} on chain ${this.chain}.`);
   }
 
   public get address(): string {
