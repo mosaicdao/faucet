@@ -26,6 +26,10 @@ export default class CoinFaucet implements Faucet {
     this.amount = config.get(amountConfigAccessor);
   }
 
+  public get address(): string {
+    return this.ethNode.account.address;
+  }
+
   /**
    * Sends value to the given address.
    * @param address The beneficiary.

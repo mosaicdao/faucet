@@ -24,15 +24,30 @@ export default class Account {
   }
 
   /**
+   * Returns true if this account is part of the configuration.
+   */
+  public isInConfig(): boolean {
+    return config.has(this.accountConfigAccessor);
+  }
+
+  /**
+   * Creates a new web3 account and adds it to the configuration.
+   * Will exit the process as the config cannot be updated at runtime.
+   * @param password The password that is used to encrypt the account.
+   */
+  public addNewToConfig(password: string): void {
+    const web3Account = this.web3.eth.accounts.create();
+    Logger.info(`Created new account for chain ${this.chain}: ${web3Account.address}.`);
+
+    const encryptedAccount = this.web3.eth.accounts.encrypt(web3Account.privateKey, password);
+    return this.updateConfigAccount(encryptedAccount);
+  }
+
+  /**
    * Unlocks this account and keeps it in memory unlocked.
    * @param password The password required to unlock the keyVault.
    */
-  public unlock(password: string): Promise<void> {
-    if (!config.has(this.accountConfigAccessor)) {
-      Logger.info('No Web3 account found.');
-      return this.createNewWeb3Account();
-    }
-
+  public unlock(password: string): void {
     Logger.info(`Unlocking account for chain ${this.chain}.`);
     const keyStore = config.get(this.accountConfigAccessor);
 
@@ -50,15 +65,6 @@ export default class Account {
 
   public get signTransaction(): (tx, callback?) => void {
     return this.web3Account.signTransaction;
-  }
-
-  private async createNewWeb3Account(): Promise<any> {
-    Logger.info(`Creating new account for chain ${this.chain}.`);
-    const web3Account = this.web3.eth.accounts.create();
-    const password: string = await this.interaction.inquireNewPassword()
-
-    const encryptedAccount = this.web3.eth.accounts.encrypt(web3Account.privateKey, password);
-    return this.updateConfigAccount(encryptedAccount);
   }
 
   private updateConfigAccount(encryptedAccount: Object): void {

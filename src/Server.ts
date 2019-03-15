@@ -43,7 +43,10 @@ export default class Server {
     const server = http.createServer(this.requestHandler.bind(this))
 
     return server.listen(this.port, () => {
-      Logger.info(`Server is listening on ${this.port}`)
+      Logger.info(`Server is listening on ${this.port}.`);
+      for (const chain of chains) {
+        Logger.info(`Running faucet ${this.faucets[chain].address} on chain ${chain}.`);
+      }
     })
   }
 
@@ -64,6 +67,13 @@ export default class Server {
         chain,
         interaction,
       );
+
+      if (!account.isInConfig()) {
+        Logger.info(`No Web3 account found for chain ${chain}.`);
+        const newPassword: string = await interaction.inquireNewPassword()
+        account.addNewToConfig(newPassword);
+      }
+
       Logger.info(`Requiring password for account on chain ${chain}`);
       const password = await interaction.inquirePassword();
       account.unlock(password);
