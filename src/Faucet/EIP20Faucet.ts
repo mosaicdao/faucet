@@ -39,6 +39,10 @@ export default class EIP20Faucet implements Faucet {
     this.amount = config.get(amountConfigAccessor);
   }
 
+  public get address(): string {
+    return this.ethNode.account.address;
+  }
+
   /**
    * Makes an EIP20 transfer to the given address.
    * @param address The beneficiary.
