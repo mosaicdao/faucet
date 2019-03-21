@@ -34,18 +34,15 @@ export default class CoinFaucet implements Faucet {
    * Sends value to the given address.
    * @param address The beneficiary.
    */
-  public fill(address: string): Promise<string> {
+  public fill(address: string): any {
     Logger.info(`Sending ${this.amount} coins to ${address}.`);
     return this.ethNode.web3.eth.sendTransaction({
       to: address,
       value: this.amount,
       from: this.ethNode.account.address,
-    }).then(
-      (promiEvent) => {
-        const txHash = promiEvent.transactionHash;
-        Logger.info(`Sent ${this.amount} coins to ${address}. TxHash: ${txHash}`);
-
-        return txHash;
-      });
+    }).on(
+      'transactionHash',
+      txHash => Logger.info(`Sent ${this.amount} coins to ${address}. TxHash: ${txHash}`),
+    );
   }
 }

@@ -133,16 +133,22 @@ export default class Server {
 
       try {
         faucet.fill(address)
-          .then(txHash => response.end(JSON.stringify({ txHash })))
-          .catch((error) => {
-            Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
-            response.statusCode = 500;
-            response.end(
-              JSON.stringify(
-                { error: 'Could not fill address', details: error.toString() }
-              )
-            );
-          });
+          .on(
+            'transactionHash',
+            txHash => response.end(JSON.stringify({ txHash })),
+          )
+          .on(
+            'error',
+            (error) => {
+              Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
+              response.statusCode = 500;
+              response.end(
+                JSON.stringify(
+                  { error: 'Could not fill address', details: error.toString() }
+                )
+              );
+            }
+          );
       } catch (error) {
         Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
         response.statusCode = 500;

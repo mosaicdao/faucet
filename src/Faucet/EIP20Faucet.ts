@@ -47,19 +47,15 @@ export default class EIP20Faucet implements Faucet {
    * Makes an EIP20 transfer to the given address.
    * @param address The beneficiary.
    */
-  public fill(address: string): Promise<string> {
+  public fill(address: string): any {
     Logger.info(`Sending ${this.amount} EIP20 tokens to ${address}.`);
     return this.eip20Contract.methods
       .transfer(address, this.amount.toString())
       .send({
         from: this.ethNode.account.address,
-      })
-      .then(
-        (promiEvent) => {
-          const txHash = promiEvent.transactionHash;
-          Logger.info(`Sent ${this.amount} EIP20 tokens to ${address}. TxHash: ${txHash}`);
-
-          return txHash;
-        });
+      }).on(
+        'transactionHash',
+        txHash => Logger.info(`Sent ${this.amount} EIP20 tokens to ${address}. TxHash: ${txHash}`),
+      );
   }
 }

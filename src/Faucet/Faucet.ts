@@ -10,5 +10,5 @@ export default interface Faucet {
    * Sends value to the given address.
    * @param address The address of the recipient of the value.
    */
-  fill(address: string): Promise<string>;
+  fill(address: string): any;
 }
