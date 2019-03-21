@@ -37,13 +37,13 @@ If it is `EIP20`, it also requires an `Address`. The `Fund`'s `Amount` is sent p
 `Coin` means it sends base coins.
 `EIP20` means it makes a transaction to the EIP20Token at the given address to `transfer` tokens.
 
-To start, run `npm start -- <chains...>`.
+To start, run `./faucet <chains...>`.
 Chains are identified by their chain id.
-E.g. `npm start -- 3 200`.
+E.g. `./faucet 3 200`.
 For each chain, there must exist a configuration.
 The default configuration is in `./config/default.json`.
 
-Run `npm start -- --help` for help.
+Run `./faucet --help` for help.
 
 Mosaic faucet for base coins and EIP20 tokens.
 

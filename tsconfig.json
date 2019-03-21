@@ -9,7 +9,6 @@
         "resolveJsonModule": true
     },
     "include": [
-        "faucet.ts",
         "src/**/*.ts"
     ],
     "exclude": [
