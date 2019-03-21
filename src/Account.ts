@@ -86,7 +86,9 @@ export default class Account {
     );
 
     // Has to exit as config cannot be reloaded or updated at runtime:
-    Logger.warn('Process has to exit as it does not support dynamic configuration at runtime. Please restart.');
+    Logger.warn(
+      'Process has to exit as it does not support dynamic configuration at runtime. Please restart.'
+    );
     process.exit(1);
   }
 

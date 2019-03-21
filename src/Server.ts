@@ -102,7 +102,11 @@ export default class Server {
       if (!stringBody) {
         Logger.info(`Invalid request body: ${stringBody}`);
         response.statusCode = 400;
-        response.end(JSON.stringify({ error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }));
+        response.end(
+          JSON.stringify(
+            { error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }
+          )
+        );
         return;
       }
 
@@ -111,7 +115,11 @@ export default class Server {
       if (!address || !chain) {
         Logger.info(`Invalid request body: ${stringBody}`);
         response.statusCode = 400;
-        response.end(JSON.stringify({ error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }));
+        response.end(
+          JSON.stringify(
+            { error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }
+          )
+        );
         return;
       }
 
@@ -129,12 +137,20 @@ export default class Server {
           .catch((error) => {
             Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
             response.statusCode = 500;
-            response.end(JSON.stringify({ error: 'Could not fill address', details: error.toString() }));
+            response.end(
+              JSON.stringify(
+                { error: 'Could not fill address', details: error.toString() }
+              )
+            );
           });
       } catch (error) {
         Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
         response.statusCode = 500;
-        response.end(JSON.stringify({ error: 'Could not fill address', details: error.toString() }));
+        response.end(
+          JSON.stringify(
+            { error: 'Could not fill address', details: error.toString() }
+          )
+        );
         return;
       }
     });
