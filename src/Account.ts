@@ -12,14 +12,17 @@ export default class Account {
   public chain: string;
   public web3: Web3;
 
-  private interaction: Interaction;
   private accountConfigAccessor: string;
   private web3Account: any;
 
-  constructor(web3: Web3, chain: string, interaction: Interaction) {
+  /**
+   * @param web3 The web3 instance that this account uses.
+   * @param chain 
+   * @param interaction 
+   */
+  constructor(web3: Web3, chain: string) {
     this.web3 = web3;
     this.chain = chain;
-    this.interaction = interaction;
     this.accountConfigAccessor = `Chains.${this.chain}.Account`;
   }
 
@@ -55,18 +58,30 @@ export default class Account {
     Logger.info(`Unlocked account ${this.web3Account.address} on chain ${this.chain}.`);
   }
 
+  /**
+   * The public address of this account.
+   */
   public get address(): string {
     return this.web3Account.address;
   }
 
+  /**
+   * The private key of this account.
+   */
   public get privateKey(): string {
     return this.web3Account.privateKey;
   }
 
+  /**
+   * A function that signs a transaction. As per Web3 account.
+   */
   public get signTransaction(): (tx, callback?) => void {
     return this.web3Account.signTransaction;
   }
 
+  /**
+   * Writes the account into the file that was read by the current config.
+   */
   private updateConfigAccount(encryptedAccount: Object): void {
     const configObject: any = config.util.toObject(config);
     configObject['Chains'][this.chain]['Account'] = encryptedAccount;
@@ -92,6 +107,10 @@ export default class Account {
     process.exit(1);
   }
 
+  /**
+   * Tries to identify which file the config was read from.
+   * @returns The path to the config file. Or an empty string if not found.
+   */
   private getConfigSource(): string {
     const sources = config.util.getConfigSources();
     for (const source of sources) {

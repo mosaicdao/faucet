@@ -5,7 +5,7 @@ import Faucet from "./Faucet";
 import Logger from '../Logger';
 
 /**
- * A CoinFaucet sends value in the form of blockchain base coins.
+ * A CoinFaucet sends value in the form of blockchain base coins directly from its address.
  */
 export default class CoinFaucet implements Faucet {
   public ethNode: EthNode;
@@ -13,6 +13,10 @@ export default class CoinFaucet implements Faucet {
 
   private amount: number;
 
+  /**
+   * @param ethNode The EthNode to use as a connection for filling accounts.
+   * @param chain The identifier of the chain that this faucet uses.
+   */
   constructor(ethNode: EthNode, chain: string) {
     this.ethNode = ethNode;
     this.chain = chain;
@@ -26,6 +30,9 @@ export default class CoinFaucet implements Faucet {
     this.amount = config.get(amountConfigAccessor);
   }
 
+  /**
+   * @returns The address of this faucet on the chain.
+   */
   public get address(): string {
     return this.ethNode.account.address;
   }
@@ -33,6 +40,7 @@ export default class CoinFaucet implements Faucet {
   /**
    * Sends value to the given address.
    * @param address The beneficiary.
+   * @returns A Web3 PromiEvent.
    */
   public fill(address: string): any {
     Logger.info(`Sending ${this.amount} coins to ${address}.`);

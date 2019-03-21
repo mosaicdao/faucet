@@ -65,7 +65,6 @@ export default class Server {
       const account: Account = new Account(
         web3,
         chain,
-        interaction,
       );
 
       if (!account.isInConfig()) {

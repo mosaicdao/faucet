@@ -7,7 +7,8 @@ import Logger from '../Logger';
 import * as eip20Abi from '../../abi/EIP20Token.json';
 
 /**
- * An EIP20 faucet sends value in the form of EIP20 tokens.
+ * An EIP20 faucet sends value in the form of EIP20 tokens by sending a transfer transaction to the
+ * EIP20 token.
  */
 export default class EIP20Faucet implements Faucet {
   public ethNode: EthNode;
@@ -17,6 +18,10 @@ export default class EIP20Faucet implements Faucet {
   private amount: number;
   private eip20Contract: any;
 
+  /**
+   * @param ethNode The EthNode to use as a connection for filling accounts.
+   * @param chain The identifier of the chain that this faucet uses.
+   */
   constructor(ethNode: EthNode, chain: string) {
     this.ethNode = ethNode;
     this.chain = chain;
@@ -39,6 +44,9 @@ export default class EIP20Faucet implements Faucet {
     this.amount = config.get(amountConfigAccessor);
   }
 
+  /**
+   * @returns The address of this faucet on the chain.
+   */
   public get address(): string {
     return this.ethNode.account.address;
   }
@@ -46,6 +54,7 @@ export default class EIP20Faucet implements Faucet {
   /**
    * Makes an EIP20 transfer to the given address.
    * @param address The beneficiary.
+   * @returns A Web3 PromiEvent.
    */
   public fill(address: string): any {
     Logger.info(`Sending ${this.amount} EIP20 tokens to ${address}.`);
