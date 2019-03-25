@@ -2,7 +2,6 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "outDir": "build",
         "sourceMap": true,
         "types": [
             "node"
@@ -10,7 +9,6 @@
         "resolveJsonModule": true
     },
     "include": [
-        "faucet.ts",
         "src/**/*.ts"
     ],
     "exclude": [

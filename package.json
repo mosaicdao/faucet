@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint src -c .eslintrc.json --ext ts",
-    "start": "tsc && node build/faucet.js",
-    "test": "npm run test",
-    "tsc": "tsc"
+    "start": "ts-node ./src/bin/faucet.ts"
   },
   "repository": {
     "type": "git",
@@ -24,6 +22,7 @@
     "commander": "^2.19.0",
     "config": "^3.0.1",
     "inquirer": "^6.2.2",
+    "ts-node": "^8.0.3",
     "typescript": "^3.3.3333",
     "web3": "^1.0.0-beta.37",
     "web3-provider-engine": "^14.2.0",

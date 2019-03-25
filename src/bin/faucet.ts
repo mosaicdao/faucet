@@ -4,9 +4,9 @@
 
 import * as faucet from 'commander';
 
-import Server from './src/Server';
+import Server from '../Server';
 
-import { version } from './package.json';
+import { version } from '../../package.json';
 
 
 faucet
