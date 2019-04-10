@@ -8,13 +8,6 @@
         "Address": "0x325f05a75999347b7d8461BaEf274afAE0B8AE1c"
       }
     },
-    "200": {
-      "WebSocket": "ws://localhost:8548",
-      "Funds": {
-        "Type": "Coin",
-        "Amount": 10
-      }
-    },
     "1406": {
       "WebSocket": "ws://localhost:8549",
       "Funds": {
