@@ -1,15 +1,23 @@
-import * as http from 'http';
-import * as Web3 from 'web3';
+import config from 'config';
+import http from 'http';
+import Web3 from 'web3';
+import { WebsocketProvider, AbstractSocketProvider } from 'web3-providers';
 
 import Account from './Account';
-import CommandLineInteraction from './Interaction/CommandLineInteraction';
-import EthNode from './EthNode';
 import Faucet from './Faucet/Faucet';
 import FaucetFactory from './Faucet/FaucetFactory';
+import Interaction from './Interaction';
 import Logger from './Logger';
+import ServerError from './ServerError';
 
+/** A map of chain Ids to their respective faucet. */
 interface Faucets {
   [chain: string]: Faucet;
+}
+
+/** A map of chain Ids to their respective password. */
+interface Passwords {
+  [chain: string]: string;
 }
 
 /**
@@ -19,48 +27,52 @@ interface Faucets {
  * The chain id identifies for the server on which chain to send value.
  */
 export default class Server {
-  private port: number;
+  /** All the faucets that this server runs. */
   private faucets: Faucets = {};
+  /** The account passwords of the accounts that the faucets use. */
+  private passwords: Passwords = {};
 
   /**
    * @param port The server will listen for incoming requests on this port.
+   * @param chains A list of chains to start faucets for. Starts one faucet per chain based on the
+   *     configuration.
+   * @param interaction An interaction instance to retrieve passwords.
    */
-  constructor(port: number) {
-    this.port = port;
+  constructor(private port: number, private chains: string[], private interaction: Interaction) {
+    if (chains.length === 0) {
+      throw new Error('No chain provided, server can only start with at least one faucet.');
+    }
   }
 
   /**
    * Starts the HTTP server.
    */
-  public async run(chains: string[]): Promise<any> {
-    if (chains.length === 0) {
-      Logger.error('No chain provided, server can only start with at least one faucet.');
-      process.exit(1);
-    }
-    await this.initializeFaucets(chains);
+  public async run(): Promise<http.Server> {
+    this.passwords = await this.readPasswords();
+    this.faucets = await this.initializeFaucets();
 
-    Logger.info('Starting server.');
+    Logger.info('starting server');
     const server = http.createServer(this.requestHandler.bind(this))
 
     return server.listen(this.port, () => {
-      Logger.info(`Server is listening on ${this.port}.`);
-      for (const chain of chains) {
-        Logger.info(`Running faucet ${this.faucets[chain].address} on chain ${chain}.`);
+      for (const chain of this.chains) {
+        Logger.info('running faucet', { chain, address: this.faucets[chain].account.address });
       }
+
+      Logger.info('server is listening', { port: this.port });
     })
   }
 
   /**
    * Starts new ethereum node connections, one per chain, and sets up the faucets.
-   * @param chains The chains for which to provide faucets, as identified in the configuration.
+   * @returns The faucets wrapped in a Promise.
    */
-  private async initializeFaucets(chains: string[]): Promise<any> {
-    Logger.info('Initializing faucets.');
-    for (const chain of chains) {
-      Logger.info(`Initializing faucet on chain ${chain}`);
-
-      const web3: Web3 = new Web3();
-      const interaction = new CommandLineInteraction();
+  private async initializeFaucets(): Promise<Faucets> {
+    Logger.info('initializing faucets');
+    const faucets: Faucets = {};
+    for (const chain of this.chains) {
+      Logger.info('initializing faucet', { chain });
+      const web3: Web3 = this.getWeb3(chain);
 
       const account: Account = new Account(
         web3,
@@ -68,22 +80,23 @@ export default class Server {
       );
 
       if (!account.isInConfig()) {
-        Logger.info(`No Web3 account found for chain ${chain}.`);
-        const newPassword: string = await interaction.inquireNewPassword()
+        Logger.info('no Web3 account found', { chain });
+        const newPassword: string = await this.interaction.inquireNewPassword()
         account.addNewToConfig(newPassword);
       }
 
-      Logger.info(`Requiring password for account on chain ${chain}`);
-      const password = await interaction.inquirePassword();
+      const password: string = this.passwords[chain];
+      if (!password) {
+        throw new Error(`Trying to start faucet without password on chain ${chain}`);
+      }
       account.unlock(password);
 
-      const ethNode: EthNode = new EthNode(account, chain);
-      ethNode.start();
+      const faucet: Faucet = FaucetFactory.build(account, chain);
 
-      const faucet: Faucet = FaucetFactory.build(ethNode, chain);
-
-      this.faucets[chain] = faucet;
+      faucets[chain] = faucet;
     }
+
+    return faucets;
   }
 
   /**
@@ -91,73 +104,116 @@ export default class Server {
    * @param request Incoming request message.
    * @param response Writing a response to the client.
    */
-  private requestHandler(request: http.IncomingMessage, response: http.ServerResponse): void {
-    const self = this;
-    const body = [];
-    request.on('data', function (chunk) {
-      body.push(chunk);
-    }).on('end', function () {
-      const stringBody = Buffer.concat(body).toString();
-      if (!stringBody) {
-        Logger.info(`Invalid request body: ${stringBody}`);
-        response.statusCode = 400;
-        response.end(
-          JSON.stringify(
-            { error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }
-          )
-        );
-        return;
-      }
+  private async requestHandler(request: http.IncomingMessage, response: http.ServerResponse): Promise<void> {
+    let body: Uint8Array[];
+    try {
+      body = await this.readBody(request);
+    } catch (error) {
+      Logger.warn('invalid request', { reason: 'could not read body', error: error.toString() });
+      return this.returnError(
+        response,
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+      );
+    }
 
-      const parsedBody = JSON.parse(stringBody);
-      const [address, chain] = parsedBody.beneficiary.split('@');
-      if (!address || !chain) {
-        Logger.info(`Invalid request body: ${stringBody}`);
-        response.statusCode = 400;
-        response.end(
-          JSON.stringify(
-            { error: 'Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}' }
-          )
-        );
-        return;
-      }
+    const stringBody: string = Buffer.concat(body).toString();
+    if (!stringBody) {
+      Logger.warn('invalid request', { reason: 'could not read body', body: stringBody });
+      return this.returnError(
+        response,
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+      );
+    }
 
-      const faucet: Faucet = self.faucets[chain];
-      if (faucet === undefined) {
-        Logger.info(`Invalid request body: ${stringBody}`);
-        response.statusCode = 400;
-        response.end(JSON.stringify({ error: `No faucet running for chain ${chain}` }));
-        return;
-      }
+    const parsedBody = JSON.parse(stringBody);
+    const [address, chain] = parsedBody.beneficiary.split('@');
+    if (!address || !chain) {
+      Logger.warn('invalid request', { reason: 'address or chain missing', body: stringBody });
+      return this.returnError(
+        response,
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+      );
+    }
 
-      try {
-        faucet.fill(address)
-          .on(
-            'transactionHash',
-            txHash => response.end(JSON.stringify({ txHash })),
-          )
-          .on(
-            'error',
-            (error) => {
-              Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
-              response.statusCode = 500;
-              response.end(
-                JSON.stringify(
-                  { error: 'Could not fill address', details: error.toString() }
-                )
-              );
-            }
-          );
-      } catch (error) {
-        Logger.error(`Could not fill address from faucet ${faucet.chain}: ${error.toString()}`);
-        response.statusCode = 500;
-        response.end(
-          JSON.stringify(
-            { error: 'Could not fill address', details: error.toString() }
-          )
-        );
-        return;
-      }
+    const faucet: Faucet = this.faucets[chain];
+    if (faucet === undefined) {
+      Logger.warn('invalid request', { reason: 'no faucet for chain', body: stringBody });
+      return this.returnError(
+        response,
+        new ServerError(`No faucet running for chain ${chain}`, 400),
+      );
+    }
+
+    try {
+      const txHash = await faucet.fill(address);
+      response.end(JSON.stringify({ txHash }));
+    } catch (error) {
+      Logger.error('could not fill address', { chain: faucet.chain, error: error.toString() });
+      return this.returnError(
+        response,
+        new ServerError('Server error. Could not fill address.', 500),
+      );
+    }
+  }
+
+  /**
+   * Reads and returns the body from a request.
+   * @param request The request from which to read the body.
+   * @returns The body buffer, wrapped in a promise.
+   */
+  private readBody(request: http.IncomingMessage): Promise<Uint8Array[]> {
+    return new Promise((resolve, reject) => {
+      const body = [];
+      request.on('data', (chunk) => {
+        body.push(chunk);
+      }).on('end', () => {
+        resolve(body);
+      }).on('error', reject);
     });
+  }
+
+  /**
+   * Reads and returns the passwords for all chains.
+   * @returns The passwords, wrapped in a promise.
+   */
+  private async readPasswords(): Promise<Passwords> {
+    const passwords: Passwords = {};
+    for (const chain of this.chains) {
+      Logger.info('requiring password to unlock account account', { chain });
+      const password = await this.interaction.inquirePassword();
+
+      passwords[chain] = password;
+    }
+
+    return passwords;
+  }
+
+  /**
+   * Builds a Web3 instance that points to a node of the given chain.
+   * @param chain The chain identifier of the chain that this web3 should connect to.
+   * @returns The Web3 instance.
+   */
+  private getWeb3(chain: string): Web3 {
+    const websocketConfigAccessor: string = `Chains.${chain}.WebSocket`;
+    if (!config.has(websocketConfigAccessor)) {
+      throw new Error(`Missing config key ${websocketConfigAccessor}!`);
+    }
+    const host: string = config.get(websocketConfigAccessor);
+    const provider: AbstractSocketProvider = new WebsocketProvider(host);
+    const web3: Web3 = new Web3(provider);
+
+    return web3;
+  }
+
+  /**
+   * Returns the given error as the given response.
+   * @param response The server response that should respond with the error.
+   * @param error The error that the response should be.
+   */
+  private returnError(response: http.ServerResponse, error: ServerError): void {
+    response.statusCode = error.code;
+    response.end(
+      JSON.stringify({ error: error.message }),
+    );
   }
 }

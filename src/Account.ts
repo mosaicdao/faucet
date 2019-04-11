@@ -1,29 +1,36 @@
-import * as config from 'config';
-import * as fs from 'fs';
-import * as Web3 from 'web3';
+import config from 'config';
+import EthAccounts from 'web3-eth-accounts';
+import fs from 'fs';
+import Web3 from 'web3';
 
-import Interaction from './Interaction'
 import Logger from './Logger';
 
 /**
- * An account is a web3 public/private key pair.
+ * An account is a web3 account that is connected to a node and can send signed transactions,
+ * signed with this account.
  */
 export default class Account {
-  public chain: string;
-  public web3: Web3;
-
-  private accountConfigAccessor: string;
-  private web3Account: any;
+  /** Used to access the account in the config. */
+  private accountConfigAccessor: string = `Chains.${this.chain}.Account`;
+  /** A Web3 account that is used (unlocked) to sign transactions. */
+  private web3Account: EthAccounts.Account;
+  /**
+   * The nonce of this account. Required to send transactions to the node.
+   * If nonce is less than zero, we know we need to fetch it from the node.
+   */
+  private nonce: number = -1;
 
   /**
    * @param web3 The web3 instance that this account uses.
-   * @param chain 
-   * @param interaction 
+   * @param chain The identifier of the chain that this account is used on.
    */
-  constructor(web3: Web3, chain: string) {
-    this.web3 = web3;
-    this.chain = chain;
-    this.accountConfigAccessor = `Chains.${this.chain}.Account`;
+  constructor(readonly web3: Web3, readonly chain: string) { }
+
+  /**
+   * The public address of this account.
+   */
+  public get address(): string {
+    return this.web3Account.address;
   }
 
   /**
@@ -40,7 +47,7 @@ export default class Account {
    */
   public addNewToConfig(password: string): void {
     const web3Account = this.web3.eth.accounts.create();
-    Logger.info(`Created new account for chain ${this.chain}: ${web3Account.address}.`);
+    Logger.info('created new account', { chain: this.chain, account: web3Account.address });
 
     const encryptedAccount = this.web3.eth.accounts.encrypt(web3Account.privateKey, password);
     return this.updateConfigAccount(encryptedAccount);
@@ -51,36 +58,37 @@ export default class Account {
    * @param password The password required to unlock the keyVault.
    */
   public unlock(password: string): void {
-    Logger.info(`Unlocking account for chain ${this.chain}.`);
+    Logger.info('unlocking account', { chain: this.chain });
     const keyStore = config.get(this.accountConfigAccessor);
 
+    // Unlocking the account and adding it to the local web3 instance so that everything is signed
+    // locally when using web3.eth.send
     this.web3Account = this.web3.eth.accounts.decrypt(keyStore, password);
-    Logger.info(`Unlocked account ${this.web3Account.address} on chain ${this.chain}.`);
+    this.web3.eth.accounts.wallet.add(this.web3Account);
+    Logger.info('unlocked account', { chain: this.chain, account: this.web3Account.address });
   }
 
   /**
-   * The public address of this account.
+   * Get the current nonce to send the next transaction with this account.
+   * Takes pending transactions into account.
+   * Once the nonce is gotten from the node, it is cached and increased by 1 for every transaction.
+   * The node is only contacted on the first call to get the current nonce on the chain.
+   * @returns The nonce wrapped in a Promise.
    */
-  public get address(): string {
-    return this.web3Account.address;
-  }
+  public async getNonce(): Promise<number> {
+    if (this.nonce < 0) {
+      this.nonce = await this.web3.eth.getTransactionCount(this.address, 'pending');
+    } else {
+      this.nonce++;
+    }
 
-  /**
-   * The private key of this account.
-   */
-  public get privateKey(): string {
-    return this.web3Account.privateKey;
-  }
-
-  /**
-   * A function that signs a transaction. As per Web3 account.
-   */
-  public get signTransaction(): (tx, callback?) => void {
-    return this.web3Account.signTransaction;
+    return this.nonce;
   }
 
   /**
    * Writes the account into the file that was read by the current config.
+   * Exits the process afterwards!
+   * @throws Error if it cannot update the configuration.
    */
   private updateConfigAccount(encryptedAccount: Object): void {
     const configObject: any = config.util.toObject(config);
@@ -91,8 +99,7 @@ export default class Account {
     try {
       fs.accessSync(configSource, fs.constants.F_OK)
     } catch (error) {
-      Logger.error(`Could not find config file to update: ${configSource}`);
-      process.exit(1);
+      throw new Error(`Could not find config file to update: ${configSource}`);
     }
 
     fs.writeFileSync(
@@ -102,8 +109,10 @@ export default class Account {
 
     // Has to exit as config cannot be reloaded or updated at runtime:
     Logger.warn(
-      'Process has to exit as it does not support dynamic configuration at runtime. Please restart.'
+      'process has to exit as it does not support dynamic configuration at runtime; please restart.'
     );
+    // Exit code 1 even though this is expected to signal to the user that they need to check what
+    // happened.
     process.exit(1);
   }
 

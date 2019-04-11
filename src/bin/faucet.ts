@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-'use strict';
+import faucet from 'commander';
 
-import * as faucet from 'commander';
-
+import CommandLineInteraction from '../Interaction/CommandLineInteraction';
 import Server from '../Server';
-
 import { version } from '../../package.json';
+import Logger from '../Logger';
 
+const DEFAULT_PORT = 80;
 
 faucet
   .version(version)
@@ -17,11 +17,18 @@ faucet
   .action(
     async (chains: string[], command) => {
       if (command.port === undefined) {
-        command.port = 80;
+        command.port = DEFAULT_PORT;
       }
 
-      const server: Server = new Server(command.port);
-      server.run(chains);
+      const interaction = new CommandLineInteraction();
+
+      try {
+        const server: Server = new Server(command.port, chains, interaction);
+        server.run();
+      } catch (error) {
+        Logger.error(error.toString());
+        process.exit(1);
+      }
     }
   )
   .parse(process.argv);

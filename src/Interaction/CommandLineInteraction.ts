@@ -1,4 +1,4 @@
-import * as inquirer from 'inquirer';
+import inquirer from 'inquirer';
 
 import Interaction from "../Interaction";
 
@@ -24,7 +24,7 @@ export default class CommandLineInteraction implements Interaction {
    * passwords match. Returns the matching password.
    */
   public async inquireNewPassword(): Promise<string> {
-    const firstInput: any = await inquirer.prompt({
+    const firstInput: inquirer.ui.Prompt = await inquirer.prompt({
       type: 'password',
       name: 'password',
       message: 'Select a password to encrypt the account:',
