@@ -60,11 +60,9 @@ export default class EIP20Faucet implements Faucet {
   private async sendTransactions(transferTx: any, address: string): Promise<string> {
     await this.checkBalance();
 
-    // Checking that a call passes, meaning the contract would not revert.
+    // Gas estimation also checks that a call passes, meaning the contract would not revert.
     // Otherwise the transaction hash would return a success case when actually the funding would
     // not pass and the transaction would revert.
-    await transferTx.call({ from: this.account.address });
-
     const gas = await transferTx.estimateGas({ from: this.account.address });
     const nonce = await this.account.getNonce();
 

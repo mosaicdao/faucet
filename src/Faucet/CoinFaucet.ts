@@ -36,7 +36,9 @@ export default class CoinFaucet implements Faucet {
 
     transactionHashPromise.then(
       txHash => Logger.info('sent coins', { chain: this.chain, amount: this.amount, toWhom: address, txHash }),
-    );
+    ).catch(() => {
+      // Error handling should be done at the caller where the promise is returned to (see below).
+    })
 
     return transactionHashPromise;
   }
@@ -53,6 +55,7 @@ export default class CoinFaucet implements Faucet {
       value: this.amount,
       from: this.account.address,
     };
+
     transaction.nonce = await this.account.getNonce();
     transaction.gas = await this.account.web3.eth.estimateGas(transaction);
 
