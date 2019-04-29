@@ -3,6 +3,8 @@
 import faucet from 'commander';
 
 import CommandLineInteraction from '../Interaction/CommandLineInteraction';
+import Interaction from '../Interaction';
+import NonInteractiveInteraction from '../Interaction/NonInteractiveInteraction';
 import Server from '../Server';
 import { version } from '../../package.json';
 import Logger from '../Logger';
@@ -14,21 +16,25 @@ faucet
   .description('Mosaic faucet for base coins and EIP20 tokens.')
   .arguments('<chains...>')
   .option('-p, --port <port>', 'the port where the server listens on', parseInt)
+  .option('-n, --non-interactive <password>', 'run the faucet non-interactively')
   .action(
-    async (chains: string[], command) => {
-      if (command.port === undefined) {
-        command.port = DEFAULT_PORT;
+    async (chains: string[], command): Promise<void> => {
+      const port = command.port === undefined ? DEFAULT_PORT : command.port;
+
+      let interaction: Interaction;
+      if (command.nonInteractive === undefined) {
+        interaction = new CommandLineInteraction();
+      } else {
+        interaction = new NonInteractiveInteraction(command.nonInteractive);
       }
 
-      const interaction = new CommandLineInteraction();
-
       try {
-        const server: Server = new Server(command.port, chains, interaction);
+        const server: Server = new Server(port, chains, interaction);
         server.run();
       } catch (error) {
         Logger.error(error.toString());
         process.exit(1);
       }
-    }
+    },
   )
   .parse(process.argv);
