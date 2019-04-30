@@ -39,11 +39,17 @@ If it is `EIP20`, it also requires an `Address`. The `Fund`'s `Amount` is sent p
 
 To start, run `./faucet <chains...>`.
 Chains are identified by their chain id.
-E.g. `./faucet 3 200`.
+E.g. `./faucet 3 1407`.
 For each chain, there must exist a configuration.
 The default configuration is in `./config/default.json`.
 
-Run `./faucet --help` for help.
+Use the `--port` option to run the faucet at a different port than the default one.
+`./faucet --port 8080 1407`
+
+Use the `--non-interactive` option to run the faucet non-interactively. The password you provide on the command line will be used for all faucets to unlock the account.
+`./faucet --non-interactive muchSecret 1406`
+
+Run `./faucet --help` for more help.
 
 Mosaic faucet for base coins and EIP20 tokens.
 
