@@ -46,8 +46,8 @@ The default configuration is in `./config/default.json`.
 Use the `--port` option to run the faucet at a different port than the default one.
 `./faucet --port 8080 1407`
 
-Use the `--non-interactive` option to run the faucet non-interactively. The password you provide on the command line will be used for all faucets to unlock the account.
-`./faucet --non-interactive muchSecret 1406`
+Use the `--non-interactive` option to run the faucet non-interactively. You must provide a path to a password file. The file must contain one password per line, in the order that you start name the chains in the command. In the following example, `./password.txt` has to have two lines, with the password for chain `1406` on the first line.
+`./faucet --non-interactive ./password.txt 1406 1407`
 
 Run `./faucet --help` for more help.
 
