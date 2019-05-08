@@ -1,9 +1,11 @@
 {
   "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "plugin:@typescript-eslint/recommended"
   ],
   "plugins": [
-    "json"
+    "json",
+    "@typescript-eslint"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -13,6 +15,7 @@
     }
   },
   "rules": {
+    "@typescript-eslint/indent": ["error", 2],
     "no-console": "off",
     "no-underscore-dangle": "off",
     "import/no-extraneous-dependencies": "off",
@@ -27,5 +30,13 @@
     "artifacts": false,
     "contract": false,
     "assert": false
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   }
 }
+

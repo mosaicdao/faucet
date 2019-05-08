@@ -5,6 +5,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Possible password file for non-interactive faucet
+password.txt
+
+# IDEs
+.idea/
+.vscode/
+tags
+*.swp
+
 # Runtime data
 pids
 *.pid
