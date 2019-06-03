@@ -9,6 +9,7 @@ import FaucetFactory from './Faucet/FaucetFactory';
 import Interaction from './Interaction';
 import Logger from './Logger';
 import ServerError from './ServerError';
+import EnoughFundException from './Faucet/EnoughFundException';
 
 /** A map of chain Ids to their respective faucet. */
 interface Faucets {
@@ -149,10 +150,18 @@ export default class Server {
       response.end(JSON.stringify({ txHash }));
     } catch (error) {
       Logger.error('could not fill address', { chain: faucet.chain, error: error.toString() });
-      return this.returnError(
-        response,
-        new ServerError('Server error. Could not fill address.', 500),
-      );
+
+      if (!(error instanceof EnoughFundException)) {
+        return this.returnError(
+          response,
+          new ServerError('Server error. Could not fill address.', 500),
+        );
+      } else {
+        return this.returnError(
+          response,
+          new ServerError(`${error.toString()}`, 422),
+        );
+      }
     }
   }
 

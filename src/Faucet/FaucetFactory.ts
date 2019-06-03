@@ -24,13 +24,15 @@ export default class FaucetFactory {
 
     const faucetType: string = config.get(typeConfigAccessor);
 
+    const balanceThreshold: string = config.get(`Chains.${chain}.Funds.BalanceThreshold`);
+
     switch (faucetType) {
       case 'EIP20':
         Logger.info('new EIP20 faucet', { chain, address: account.address });
-        return new EIP20Faucet(account, chain);
+        return new EIP20Faucet(account, chain, balanceThreshold);
       case 'Coin':
         Logger.info('new coin faucet', { chain, address: account.address });
-        return new CoinFaucet(account, chain);
+        return new CoinFaucet(account, chain, balanceThreshold);
       default:
         throw new Error(`Unknown faucet type from config: ${faucetType}.`);
     }

@@ -1,4 +1,5 @@
 import Account from '../Account';
+import BN = require("bn.js");
 
 export default interface Faucet {
   /** The identifier of the chain. */
@@ -8,6 +9,9 @@ export default interface Faucet {
 
   /** The faucet will use this account to fill other accounts. */
   account: Account;
+
+  /** Faucet will only fund beneficiary if beneficiary balance is less than this value. */
+  balanceThreshold: BN;
 
   /**
    * Sends value to the given address.
