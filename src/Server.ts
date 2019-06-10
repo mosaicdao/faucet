@@ -30,8 +30,18 @@ interface Passwords {
 export default class Server {
   /** All the faucets that this server runs. */
   private faucets: Faucets = {};
+
   /** The account passwords of the accounts that the faucets use. */
   private passwords: Passwords = {};
+
+  /** The HTTP port where the server listens. */
+  private port: number;
+
+  /** A list of all chain Ids that will have faucets. */
+  private chains: string[];
+
+  /** Used to get passwords to unlock chain accounts. */
+  private interaction: Interaction;
 
   /**
    * @param port The server will listen for incoming requests on this port.
@@ -39,10 +49,14 @@ export default class Server {
    *     configuration.
    * @param interaction An interaction instance to retrieve passwords.
    */
-  constructor(private port: number, private chains: string[], private interaction: Interaction) {
+  public constructor(port: number, chains: string[], interaction: Interaction) {
     if (chains.length === 0) {
       throw new Error('No chain provided, server can only start with at least one faucet.');
     }
+
+    this.port = port;
+    this.chains = chains;
+    this.interaction = interaction;
   }
 
   /**
@@ -53,15 +67,15 @@ export default class Server {
     this.faucets = await this.initializeFaucets();
 
     Logger.info('starting server');
-    const server = http.createServer(this.requestHandler.bind(this))
+    const server = http.createServer(this.requestHandler.bind(this));
 
-    return server.listen(this.port, () => {
+    return server.listen(this.port, (): void => {
       for (const chain of this.chains) {
         Logger.info('running faucet', { chain, address: this.faucets[chain].account.address });
       }
 
       Logger.info('server is listening', { port: this.port });
-    })
+    });
   }
 
   /**
@@ -73,7 +87,7 @@ export default class Server {
     const faucets: Faucets = {};
     for (const chain of this.chains) {
       Logger.info('initializing faucet', { chain });
-      const web3: Web3 = this.getWeb3(chain);
+      const web3: Web3 = Server.getWeb3(chain);
 
       const account: Account = new Account(
         web3,
@@ -82,7 +96,7 @@ export default class Server {
 
       if (!account.isInConfig()) {
         Logger.info('no Web3 account found', { chain });
-        const newPassword: string = await this.interaction.inquireNewPassword()
+        const newPassword: string = await this.interaction.inquireNewPassword();
         account.addNewToConfig(newPassword);
       }
 
@@ -105,13 +119,16 @@ export default class Server {
    * @param request Incoming request message.
    * @param response Writing a response to the client.
    */
-  private async requestHandler(request: http.IncomingMessage, response: http.ServerResponse): Promise<void> {
+  private async requestHandler(
+    request: http.IncomingMessage,
+    response: http.ServerResponse,
+  ): Promise<void> {
     let body: Uint8Array[];
     try {
-      body = await this.readBody(request);
+      body = await Server.readBody(request);
     } catch (error) {
       Logger.warn('invalid request', { reason: 'could not read body', error: error.toString() });
-      return this.returnError(
+      return Server.returnError(
         response,
         new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
       );
@@ -120,7 +137,7 @@ export default class Server {
     const stringBody: string = Buffer.concat(body).toString();
     if (!stringBody) {
       Logger.warn('invalid request', { reason: 'could not read body', body: stringBody });
-      return this.returnError(
+      return Server.returnError(
         response,
         new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
       );
@@ -130,7 +147,7 @@ export default class Server {
     const [address, chain] = parsedBody.beneficiary.split('@');
     if (!address || !chain) {
       Logger.warn('invalid request', { reason: 'address or chain missing', body: stringBody });
-      return this.returnError(
+      return Server.returnError(
         response,
         new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
       );
@@ -139,7 +156,7 @@ export default class Server {
     const faucet: Faucet = this.faucets[chain];
     if (faucet === undefined) {
       Logger.warn('invalid request', { reason: 'no faucet for chain', body: stringBody });
-      return this.returnError(
+      return Server.returnError(
         response,
         new ServerError(`No faucet running for chain ${chain}`, 400),
       );
@@ -152,12 +169,12 @@ export default class Server {
       Logger.error('could not fill address', { chain: faucet.chain, error: error.toString() });
 
       if (!(error instanceof EnoughFundException)) {
-        return this.returnError(
+        return Server.returnError(
           response,
           new ServerError('Server error. Could not fill address.', 500),
         );
       } else {
-        return this.returnError(
+        return Server.returnError(
           response,
           new ServerError(`${error.toString()}`, 422),
         );
@@ -170,7 +187,7 @@ export default class Server {
    * @param request The request from which to read the body.
    * @returns The body buffer, wrapped in a promise.
    */
-  private readBody(request: http.IncomingMessage): Promise<Uint8Array[]> {
+  private static readBody(request: http.IncomingMessage): Promise<Uint8Array[]> {
     return new Promise((resolve, reject) => {
       const body = [];
       request.on('data', (chunk) => {
@@ -189,7 +206,7 @@ export default class Server {
     const passwords: Passwords = {};
     for (const chain of this.chains) {
       Logger.info('requiring password to unlock account account', { chain });
-      const password = await this.interaction.inquirePassword();
+      const password = await this.interaction.inquirePassword(chain);
 
       passwords[chain] = password;
     }
@@ -202,7 +219,7 @@ export default class Server {
    * @param chain The chain identifier of the chain that this web3 should connect to.
    * @returns The Web3 instance.
    */
-  private getWeb3(chain: string): Web3 {
+  private static getWeb3(chain: string): Web3 {
     const websocketConfigAccessor: string = `Chains.${chain}.WebSocket`;
     if (!config.has(websocketConfigAccessor)) {
       throw new Error(`Missing config key ${websocketConfigAccessor}!`);
@@ -219,7 +236,7 @@ export default class Server {
    * @param response The server response that should respond with the error.
    * @param error The error that the response should be.
    */
-  private returnError(response: http.ServerResponse, error: ServerError): void {
+  private static returnError(response: http.ServerResponse, error: ServerError): void {
     response.statusCode = error.code;
     response.end(
       JSON.stringify({ error: error.message }),

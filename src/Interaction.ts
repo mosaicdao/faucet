@@ -2,7 +2,7 @@ export default interface Interaction {
   /**
    * Returns a password.
    */
-  inquirePassword: () => Promise<string>;
+  inquirePassword: (chainId?: string) => Promise<string>;
 
   /**
    * Returns a new password.
