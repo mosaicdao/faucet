@@ -124,6 +124,13 @@ export default class Server {
     response: http.ServerResponse,
   ): Promise<void> {
     let body: Uint8Array[];
+
+    /* Allow cross origin request, this is needed to build an UI on top of faucet */
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Request-Method', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'POST, GET');
+    response.setHeader('Access-Control-Allow-Headers', '*');
+
     try {
       body = await Server.readBody(request);
     } catch (error) {
