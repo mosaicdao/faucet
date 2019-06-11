@@ -59,4 +59,15 @@ Mosaic faucet for base coins and EIP20 tokens.
 4. Server forwards to correct Faucet to fund address.
 5. Faucet uses EthNode to send funds.
 
+#### CORS
+
+Mosaic faucet can be configured to use specific CORS settings. Default behavior allows all kinds of cross origin requests, it can be changed by updating environment variables. 
+
+* `MOSAIC_FAUCET_CORS_ORIGIN`: Set allowed origin url.
+* `MOSAIC_FAUCET_CORS_REQUEST_METHOD`: Set allowed request methods.
+* `MOSAIC_FAUCET_CORS_ALLOW_METHOD`: Set allowed methods.
+* `MOSAIC_FAUCET_CORS_ALLOW_HEADERS`: Set allowed headers. 
+
+
+
 [config package]: https://www.npmjs.com/package/config

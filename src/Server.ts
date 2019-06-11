@@ -11,7 +11,6 @@ import Interaction from './Interaction';
 import Logger from './Logger';
 import ServerError from './ServerError';
 import EnoughFundException from './Faucet/EnoughFundException';
-
 import HttpStatus = require('http-status-codes');
 
 /** A map of chain Ids to their respective faucet. */
@@ -129,10 +128,10 @@ export default class Server {
     let body: Uint8Array[];
 
     /* Allow cross origin request, this is needed to build an UI on top of faucet */
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Request-Method', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, GET');
-    response.setHeader('Access-Control-Allow-Headers', '*');
+    response.setHeader('Access-Control-Allow-Origin', process.env.MOSAIC_FAUCET_CORS_ORIGIN || '*');
+    response.setHeader('Access-Control-Request-Method', process.env.MOSAIC_FAUCET_CORS_REQUEST_METHOD || '*');
+    response.setHeader('Access-Control-Allow-Methods', process.env.MOSAIC_FAUCET_CORS_ALLOW_METHOD || 'POST, GET, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', process.env.MOSAIC_FAUCET_CORS_ALLOW_HEADERS || '*');
 
     try {
       body = await Server.readBody(request);
