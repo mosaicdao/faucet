@@ -1,6 +1,7 @@
 import config from 'config';
 import http from 'http';
 import Web3 from 'web3';
+
 import { WebsocketProvider, AbstractSocketProvider } from 'web3-providers';
 
 import Account from './Account';
@@ -10,6 +11,8 @@ import Interaction from './Interaction';
 import Logger from './Logger';
 import ServerError from './ServerError';
 import EnoughFundException from './Faucet/EnoughFundException';
+
+import HttpStatus = require('http-status-codes');
 
 /** A map of chain Ids to their respective faucet. */
 interface Faucets {
@@ -137,7 +140,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'could not read body', error: error.toString() });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -146,7 +149,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'could not read body', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -156,7 +159,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'address or chain missing', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -165,7 +168,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'no faucet for chain', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError(`No faucet running for chain ${chain}`, 400),
+        new ServerError(`No faucet running for chain ${chain}`, HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -178,14 +181,13 @@ export default class Server {
       if (!(error instanceof EnoughFundException)) {
         return Server.returnError(
           response,
-          new ServerError('Server error. Could not fill address.', 500),
-        );
-      } else {
-        return Server.returnError(
-          response,
-          new ServerError(`${error.toString()}`, 422),
+          new ServerError('Server error. Could not fill address.', HttpStatus.INTERNAL_SERVER_ERROR),
         );
       }
+      return Server.returnError(
+        response,
+        new ServerError(`${error.toString()}`, HttpStatus.UNPROCESSABLE_ENTITY),
+      );
     }
   }
 
