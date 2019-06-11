@@ -1,6 +1,7 @@
 import config from 'config';
 import http from 'http';
 import Web3 from 'web3';
+
 import { WebsocketProvider, AbstractSocketProvider } from 'web3-providers';
 
 import Account from './Account';
@@ -9,6 +10,9 @@ import FaucetFactory from './Faucet/FaucetFactory';
 import Interaction from './Interaction';
 import Logger from './Logger';
 import ServerError from './ServerError';
+import EnoughFundException from './Faucet/EnoughFundException';
+
+import HttpStatus = require('http-status-codes');
 
 /** A map of chain Ids to their respective faucet. */
 interface Faucets {
@@ -123,13 +127,28 @@ export default class Server {
     response: http.ServerResponse,
   ): Promise<void> {
     let body: Uint8Array[];
+
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': process.env.MOSAIC_FAUCET_CORS_ORIGIN || '*',
+      'Access-Control-Request-Method': process.env.MOSAIC_FAUCET_CORS_REQUEST_METHOD || '*',
+      'Access-Control-Allow-Methods': process.env.MOSAIC_FAUCET_CORS_ALLOW_METHOD || 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': process.env.MOSAIC_FAUCET_CORS_ALLOW_HEADERS || '*',
+    };
+
+    /* Allow cross origin request, this is needed to build an UI on top of the faucet */
+    if (request.method === 'OPTIONS') {
+      response.writeHead(HttpStatus.NO_CONTENT, corsHeaders);
+      response.end();
+      return;
+    }
+
     try {
       body = await Server.readBody(request);
     } catch (error) {
       Logger.warn('invalid request', { reason: 'could not read body', error: error.toString() });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -138,7 +157,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'could not read body', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -148,7 +167,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'address or chain missing', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', 400),
+        new ServerError('Could not read body. You must pass {"beneficiary": "0xaddress@chainId"}', HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -157,7 +176,7 @@ export default class Server {
       Logger.warn('invalid request', { reason: 'no faucet for chain', body: stringBody });
       return Server.returnError(
         response,
-        new ServerError(`No faucet running for chain ${chain}`, 400),
+        new ServerError(`No faucet running for chain ${chain}`, HttpStatus.BAD_REQUEST),
       );
     }
 
@@ -166,9 +185,16 @@ export default class Server {
       response.end(JSON.stringify({ txHash }));
     } catch (error) {
       Logger.error('could not fill address', { chain: faucet.chain, error: error.toString() });
+
+      if (!(error instanceof EnoughFundException)) {
+        return Server.returnError(
+          response,
+          new ServerError('Server error. Could not fill address.', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      }
       return Server.returnError(
         response,
-        new ServerError('Server error. Could not fill address.', 500),
+        new ServerError(`${error.toString()}`, HttpStatus.UNPROCESSABLE_ENTITY),
       );
     }
   }
