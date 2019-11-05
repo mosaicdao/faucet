@@ -49,7 +49,7 @@ Use the `--port` option to run the faucet at a different port than the default o
 Use the `--non-interactive` option to run the faucet non-interactively. 
 You must export ENV variables in below format
 ```
-export ACCOUNT_ADDRESS_PASSW_{chainid}={account_password}
+export ENV_ACCOUNT_PASSW_{chainid}={account_password}
 ``` 
 Example:
 ```
