@@ -1,5 +1,3 @@
-import fs from 'fs';
-
 import Interaction from '../Interaction';
 import Logger from "../Logger";
 const ENV_ACCOUNT_PASSWORD_PREFIX = 'ENV_ACCOUNT_PASSW_';
