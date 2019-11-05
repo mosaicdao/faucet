@@ -4,21 +4,35 @@ Mosaic Faucet is an ethereum faucet that supports multiple chains simultaneously
 
 ## Using an Existing Faucet
 
-Send an HTTP request to a running service that supports the chain that you want to get funded on.
+You can send HTTP request to a running faucet service that supports the chain that you want to get funded on.
 Send a POST request like so:
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "0x3e8880f88cf9a146a9d2c5001037d6d963224b8b@3"}' server:port
+curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' server:port
 ```
 
 Note that the beneficiary is of the format `address@chain`.
 `address` is the address of the beneficiary.
 `chain` is the chain identifier.
-In the example above, chain id `3` refers to ropsten.
+In the example above, chain id `3` refers to goerli.
 
 The service can run in "coin" or "eip20" mode for a chain.
 It can be different for different chains of the same service.
 In "coin" mode, the faucet will send base coins of the chain to the beneficiary.
 In "eip20" mode, the faucet will send a transaction to the configured EIP20 token to make a transfer to the beneficiary.
+
+### Supported chains and tokens
+
+Faucet is hosted on domain `http://faucet.mosaicdao.org` for below chains.
+
+#### Get OST for chain goerli. 
+```bash
+curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' http://faucet.mosaicdao.org
+```
+
+#### Get gas for auxiliary chain 1405
+```bash
+curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@1405"}' http://faucet.mosaicdao.org
+```
 
 ## Running a Faucet
 
