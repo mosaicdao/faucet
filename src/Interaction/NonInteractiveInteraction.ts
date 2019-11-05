@@ -1,6 +1,7 @@
 import fs from 'fs';
 
 import Interaction from '../Interaction';
+import Logger from "../Logger";
 const ENV_ACCOUNT_PASSWORD_PREFIX = 'ENV_ACCOUNT_PASSW_';
 
 /** A map of chain Ids to their respective password. */
@@ -26,9 +27,10 @@ export default class NonInteractiveInteraction implements Interaction {
       const chain = chains[index];
       const account_password = process.env[`${ENV_ACCOUNT_PASSWORD_PREFIX}${chain}`];
       // Assigns the password to the chain on the field.
-      if (account_password) {
-        this.passwords[chain] = account_password;
+      if (!account_password) {
+        Logger.error(`Password missing for chain: ${chain}`);
       }
+      this.passwords[chain] = account_password;
     }
     if (Object.keys(this.passwords).length !== chains.length) {
       throw new Error('Number of exported passwords does not match number of chains.');
