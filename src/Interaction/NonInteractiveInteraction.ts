@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 import Interaction from '../Interaction';
-const ENV_ACCOUNT_PASSWORD_PREFIX = 'ACCOUNT_ADDRESS_PASSW_';
+const ENV_ACCOUNT_PASSWORD_PREFIX = 'ENV_ACCOUNT_PASSW_';
 
 /** A map of chain Ids to their respective password. */
 interface Passwords {
@@ -26,7 +26,7 @@ export default class NonInteractiveInteraction implements Interaction {
       const chain = chains[index];
       const account_password = process.env[`${ENV_ACCOUNT_PASSWORD_PREFIX}${chain}`];
       // Assigns the password to the chain on the field.
-      if (!account_password) {
+      if (account_password) {
         this.passwords[chain] = account_password;
       }
     }
