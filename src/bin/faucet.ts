@@ -16,7 +16,7 @@ faucet
   .description('Mosaic faucet for base coins and EIP20 tokens.')
   .arguments('<chains...>')
   .option('-p, --port <port>', 'the port where the server listens on', parseInt)
-  .option('-n, --non-interactive <path>', 'run the faucet non-interactively')
+  .option('-n, --non-interactive', 'run the faucet non-interactively')
   .action(
     async (chains: string[], command): Promise<void> => {
       const port = command.port === undefined ? DEFAULT_PORT : command.port;
@@ -26,7 +26,7 @@ faucet
         interaction = new CommandLineInteraction();
       } else {
         try {
-          interaction = new NonInteractiveInteraction(chains, command.nonInteractive);
+          interaction = new NonInteractiveInteraction(chains);
         } catch (error) {
           Logger.error(error.toString());
           process.exit(1);

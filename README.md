@@ -1,6 +1,6 @@
 # 🚰 Mosaic Faucet
 
-Mosaic Faucet is a ethereum faucet that supports multiple chains simultaneously.
+Mosaic Faucet is an ethereum faucet that supports multiple chains simultaneously.
 
 ## Using an Existing Faucet
 
@@ -46,8 +46,15 @@ The default configuration is in `./config/default.json`.
 Use the `--port` option to run the faucet at a different port than the default one.
 `./faucet --port 8080 1407`
 
-Use the `--non-interactive` option to run the faucet non-interactively. You must provide a path to a password file. The file must contain one password per line, in the order that you start name the chains in the command. In the following example, `./password.txt` has to have two lines, with the password for chain `1406` on the first line.
-`./faucet --non-interactive ./password.txt 1406 1407`
+Use the `--non-interactive` option to run the faucet non-interactively. 
+You must export ENV variables in below format
+```
+export ENV_ACCOUNT_PASSW_{chainid}={account_password}
+``` 
+Example:
+```
+./faucet --non-interactive 1406 1407
+```
 
 Run `./faucet --help` for more help.
 
