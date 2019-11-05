@@ -1,6 +1,6 @@
-import fs from 'fs';
-
 import Interaction from '../Interaction';
+import Logger from "../Logger";
+const ENV_ACCOUNT_PASSWORD_PREFIX = 'ENV_ACCOUNT_PASSW_';
 
 /** A map of chain Ids to their respective password. */
 interface Passwords {
@@ -19,17 +19,19 @@ export default class NonInteractiveInteraction implements Interaction {
    * of chains. The passwords will be associated to the chains in the same order. The first chain
    * in the array will get the first pasword from the password file and so on.
    * @param chains The chains identifiers in an array.
-   * @param passwordPath The path to the password file.
    */
-  public constructor(chains: string[], passwordPath: string) {
-    const passwords: string[] = NonInteractiveInteraction.readPasswords(passwordPath);
-    if (passwords.length !== chains.length) {
-      throw new Error('Number of passwords in file does not match number of chains.');
-    }
-
-    for (let index = 0; index < passwords.length; index += 1) {
+  public constructor(chains: string[]) {
+    for (let index = 0; index < chains.length; index += 1) {
+      const chain = chains[index];
+      const account_password = process.env[`${ENV_ACCOUNT_PASSWORD_PREFIX}${chain}`];
       // Assigns the password to the chain on the field.
-      this.passwords[chains[index]] = passwords[index];
+      if (!account_password) {
+        Logger.error(`Password missing for chain: ${chain}`);
+      }
+      this.passwords[chain] = account_password;
+    }
+    if (Object.keys(this.passwords).length !== chains.length) {
+      throw new Error('Number of exported passwords does not match number of chains.');
     }
   }
 
@@ -48,14 +50,5 @@ export default class NonInteractiveInteraction implements Interaction {
    */
   public async inquireNewPassword(): Promise<string> {
     throw new Error('Cannot inquire new passwords non-interactively.');
-  }
-
-  private static readPasswords(path: string): string[] {
-    const passwordFile: string = fs.readFileSync(path, 'utf8');
-
-    const passwords = passwordFile.split('\n');
-
-    // Remove last empty element due to last line break:
-    return passwords.filter((password: string): boolean => password.length > 0);
   }
 }
