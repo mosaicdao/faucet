@@ -13,7 +13,7 @@ curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}'
 Note that the beneficiary is of the format `address@chain`.
 `address` is the address of the beneficiary.
 `chain` is the chain identifier.
-In the example above, chain id `3` refers to goerli.
+In the example above, chain id `5` refers to goerli.
 
 The service can run in "coin" or "eip20" mode for a chain.
 It can be different for different chains of the same service.
@@ -22,7 +22,7 @@ In "eip20" mode, the faucet will send a transaction to the configured EIP20 toke
 
 ### Supported chains and tokens
 
-Faucet is hosted on domain `http://faucet.mosaicdao.org` for below chains.
+Faucet is hosted on domain `https://faucet.mosaicdao.org` for `goerli` and `1405` chains.
 
 #### Get OST for chain goerli. 
 ```bash
