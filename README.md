@@ -26,12 +26,12 @@ Faucet is hosted on domain `https://faucet.mosaicdao.org` for `goerli` and `1405
 
 #### Get OST for chain goerli. 
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' http://faucet.mosaicdao.org
+curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' https://faucet.mosaicdao.org
 ```
 
 #### Get gas for auxiliary chain 1405
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@1405"}' http://faucet.mosaicdao.org
+curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@1405"}' https://faucet.mosaicdao.org
 ```
 
 ## Running a Faucet
