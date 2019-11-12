@@ -7,9 +7,13 @@ Mosaic Faucet is an ethereum faucet that supports multiple chains simultaneously
 You can send HTTP request to a running faucet service that supports the chain that you want to get funded on.
 Send a POST request like so:
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' server:port
+curl -H "Content-Type: text/json" -d '{"beneficiary": "<address>@<chain>"}' server:port
 ```
 
+Example
+```bash
+curl -H "Content-Type: text/json" -d '{"beneficiary": "0xCCFf24A25FbD086D9AA3f5b5b22aD0ca244f11a4@5"}' https://faucet.mosaicdao.org
+```
 Note that the beneficiary is of the format `address@chain`.
 `address` is the address of the beneficiary.
 `chain` is the chain identifier.
@@ -26,13 +30,24 @@ Faucet is hosted on domain `https://faucet.mosaicdao.org` for `goerli` and `1405
 
 #### Get OST for chain goerli. 
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@5"}' https://faucet.mosaicdao.org
+curl -H "Content-Type: text/json" -d '{"beneficiary": "<beneficiaryAddress>@5"}' https://faucet.mosaicdao.org
 ```
 
 #### Get gas for auxiliary chain 1405
 ```bash
-curl -H "Content-Type: text/json" -d '{"beneficiary": "{beneficiaryAddress}@1405"}' https://faucet.mosaicdao.org
+curl -H "Content-Type: text/json" -d '{"beneficiary": "<beneficiaryAddress>@1405"}' https://faucet.mosaicdao.org
 ```
+
+#### Refund to faucet 🙏
+
+You can refund back any unused funds to faucet.
+
+
+    | Chain | Refund Address                             |
+    |-------|--------------------------------------------|
+    | 5     | 0x743a8310a7482c56fcfc616d3e59013934ba3496 |
+    | 1405  | 0x73e4876c03412139751895879c203d1fe0a0e004 |
+
 
 ## Running a Faucet
 
@@ -88,7 +103,5 @@ Mosaic faucet can be configured to use specific CORS settings. Default behavior 
 * `MOSAIC_FAUCET_CORS_REQUEST_METHOD`: Set allowed request methods.
 * `MOSAIC_FAUCET_CORS_ALLOW_METHOD`: Set allowed methods.
 * `MOSAIC_FAUCET_CORS_ALLOW_HEADERS`: Set allowed headers. 
-
-
 
 [config package]: https://www.npmjs.com/package/config
