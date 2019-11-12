@@ -38,6 +38,17 @@ curl -H "Content-Type: text/json" -d '{"beneficiary": "<beneficiaryAddress>@5"}'
 curl -H "Content-Type: text/json" -d '{"beneficiary": "<beneficiaryAddress>@1405"}' https://faucet.mosaicdao.org
 ```
 
+#### Refund to faucet 🙏
+
+You can refund back any unused funds to faucet.
+
+
+    | Chain | Refund Address                             |
+    |-------|--------------------------------------------|
+    | 5     | 0x743a8310a7482c56fcfc616d3e59013934ba3496 |
+    | 1405  | 0x73e4876c03412139751895879c203d1fe0a0e004 |
+
+
 ## Running a Faucet
 
 First, copy `./config/default.json.dist` to `./config/default.json`.
@@ -92,16 +103,5 @@ Mosaic faucet can be configured to use specific CORS settings. Default behavior 
 * `MOSAIC_FAUCET_CORS_REQUEST_METHOD`: Set allowed request methods.
 * `MOSAIC_FAUCET_CORS_ALLOW_METHOD`: Set allowed methods.
 * `MOSAIC_FAUCET_CORS_ALLOW_HEADERS`: Set allowed headers. 
-
-#### Refund to faucet 🙏
-
-You can refund back any unused funds to faucet.
-
-
-    | Chain | Refund Address                             |
-    |-------|--------------------------------------------|
-    | 5     | 0x743a8310a7482c56fcfc616d3e59013934ba3496 |
-    | 1405  | 0x73e4876c03412139751895879c203d1fe0a0e004 |
-
 
 [config package]: https://www.npmjs.com/package/config
